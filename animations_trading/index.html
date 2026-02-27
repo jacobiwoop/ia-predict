@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Trendline Breakout - Comprendre Pas à Pas</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lightweight-charts@4.1.x/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+    <!-- Navigation latérale -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h1>📈 ML Trading</h1>
+            <p class="subtitle">Comprendre le Trendline Breakout</p>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#intro" class="active">🏠 Introduction</a></li>
+            <li><a href="#candlestick">🕯️ Les Bougies</a></li>
+            <li><a href="#trendline">📈 Trendlines</a></li>
+            <li><a href="#breakout">💥 Breakouts</a></li>
+            <li><a href="#features">🎯 Les 5 Features</a></li>
+            <li><a href="#decision-tree">🌳 Arbre de Décision</a></li>
+            <li><a href="#random-forest">🌲 Random Forest</a></li>
+            <li><a href="#comparison">⚖️ Comparaison</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <p>Guide Interactif</p>
+            <p class="version">v1.0 - 2026</p>
+        </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <main class="main-content">
+
+        <!-- SECTION 1: INTRODUCTION -->
+        <section id="intro" class="section intro-section">
+            <div class="section-header">
+                <h2>🎯 Bienvenue dans l'Univers du Trading Algorithmique</h2>
+                <p class="section-subtitle">Une aventure interactive pour comprendre comment une IA peut prédire les mouvements du marché</p>
+            </div>
+
+            <div class="intro-grid">
+                <div class="intro-card">
+                    <div class="card-icon blue">📊</div>
+                    <h3>La Stratégie</h3>
+                    <p>Détecter les cassures de lignes de tendance sur le Bitcoin</p>
+                </div>
+                <div class="intro-card">
+                    <div class="card-icon purple">🤖</div>
+                    <h3>L'Intelligence Artificielle</h3>
+                    <p>Un modèle qui apprend à filtrer les faux signaux</p>
+                </div>
+                <div class="intro-card">
+                    <div class="card-icon green">💰</div>
+                    <h3>L'Objectif</h3>
+                    <p>Transformer une stratégie à 50% en stratégie gagnante</p>
+                </div>
+            </div>
+
+            <div class="problem-banner">
+                <h3>⚠️ Le Problème du Trading</h3>
+                <div class="problem-content">
+                    <div class="problem-left">
+                        <p>Quand on trade <strong>tous les breakouts</strong> sans filtrage :</p>
+                        <ul class="problem-list">
+                            <li class="bad">❌ Win Rate: ~50% (pile ou face)</li>
+                            <li class="bad">❌ Profit Factor: ~1.02 (à peine rentable)</li>
+                            <li class="bad">❌ Beaucoup de faux signaux</li>
+                        </ul>
+                    </div>
+                    <div class="problem-right">
+                        <p>La solution : <strong>Le Meta-Labeling</strong></p>
+                        <ul class="problem-list">
+                            <li class="good">✅ L'IA analyse chaque signal</li>
+                            <li class="good">✅ Filtre les trades perdants</li>
+                            <li class="good">✅ Garde seulement les meilleurs</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cta-container">
+                <button class="btn-start" onclick="scrollToSection('candlestick')">
+                    Commencer l'Aventure 🚀
+                </button>
+            </div>
+        </section>
+
+        <!-- SECTION 2: COMPRENDRE UNE BOUGIE -->
+        <section id="candlestick" class="section">
+            <div class="section-header">
+                <h2>🕯️ Comprendre une Bougie (Candlestick)</h2>
+                <p class="section-subtitle">L'unité de base pour lire un graphique de trading</p>
+            </div>
+
+            <div class="candlestick-demo">
+                <div class="demo-controls">
+                    <button class="btn-control" onclick="generateNewCandle()">🎲 Nouvelle Bougie</button>
+                    <button class="btn-control" onclick="toggleCandleAnimation()">▶️ Animer la Formation</button>
+                </div>
+
+                <div class="candlestick-container">
+                    <div class="candlestick-chart" id="candlestick-chart"></div>
+                    <div class="candlestick-info">
+                        <div class="info-panel">
+                            <div class="info-row">
+                                <span class="label">Open:</span>
+                                <span class="value" id="open-value">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">High:</span>
+                                <span class="value high" id="high-value">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Low:</span>
+                                <span class="value low" id="low-value">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Close:</span>
+                                <span class="value" id="close-value">-</span>
+                            </div>
+                        </div>
+                        <div class="candle-visual" id="candle-visual">
+                            <svg viewBox="0 0 200 300" id="candle-svg">
+                                <!-- Sera généré par JS -->
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="explanation-box">
+                    <h4>📚 Comment lire une bougie ?</h4>
+                    <ul>
+                        <li><strong>Corps (body)</strong> : Distance entre Open et Close</li>
+                        <li><strong>Mèche haute (upper wick)</strong> : Plus haut prix atteint</li>
+                        <li><strong>Mèche basse (lower wick)</strong> : Plus bas prix atteint</li>
+                        <li><strong>🟢 Verte</strong> : Close > Open (prix monte)</li>
+                        <li><strong>🔴 Rouge</strong> : Close < Open (prix descend)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: TRENDLINES -->
+        <section id="trendline" class="section">
+            <div class="section-header">
+                <h2>📈 Les Lignes de Tendance (Trendlines)</h2>
+                <p class="section-subtitle">Comment l'ordinateur trace des lignes comme un trader humain</p>
+            </div>
+
+            <div class="trendline-demo">
+                <div class="demo-controls">
+                    <button class="btn-control" onclick="toggleSupportResistance()">🔄 Afficher Support/Résistance</button>
+                    <button class="btn-control" onclick="animateTrendlineDrawing()">✏️ Tracer les Lignes</button>
+                    <button class="btn-control" onclick="resetTrendlineChart()">🔄 Reset</button>
+                </div>
+
+                <div class="chart-container-large">
+                    <div class="chart-wrapper" id="trendline-chart"></div>
+                </div>
+
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>📏 Support (ligne verte)</h4>
+                        <p>Ligne tracée <strong>en-dessous</strong> des prix qui relie les points bas</p>
+                        <p class="concept-note">Le prix a tendance à rebondir dessus</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>📏 Résistance (ligne rouge)</h4>
+                        <p>Ligne tracée <strong>au-dessus</strong> des prix qui relie les points hauts</p>
+                        <p class="concept-note">Le prix a du mal à la dépasser</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>📊 Lookback (72 bougies)</h4>
+                        <p>Fenêtre glissante de 72 bougies pour calculer les lignes</p>
+                        <p class="concept-note">Ni trop court, ni trop long</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: BREAKOUTS -->
+        <section id="breakout" class="section">
+            <div class="section-header">
+                <h2>💥 Les Breakouts (Cassures)</h2>
+                <p class="section-subtitle">Le moment crucial où le prix franchit une barrière</p>
+            </div>
+
+            <div class="breakout-demo">
+                <div class="demo-controls">
+                    <button class="btn-control" onclick="simulateBreakout()">🚀 Simuler un Breakout</button>
+                    <button class="btn-control" onclick="simulateFakeBreakout()">⚠️ Simuler un Faux Breakout</button>
+                    <button class="btn-control" onclick="resetBreakoutChart()">🔄 Reset</button>
+                </div>
+
+                <div class="chart-container-large">
+                    <div class="chart-wrapper" id="breakout-chart"></div>
+                </div>
+
+                <div class="breakout-explanation">
+                    <div class="breakout-types">
+                        <div class="breakout-type real">
+                            <h4>✅ Vrai Breakout</h4>
+                            <ul>
+                                <li>Le prix franchit la résistance</li>
+                                <li>Volume élevé</li>
+                                <li>Le prix continue de monter</li>
+                                <li>🎯 Trade GAGNANT</li>
+                            </ul>
+                        </div>
+                        <div class="breakout-type fake">
+                            <h4>❌ Faux Breakout</h4>
+                            <ul>
+                                <li>Le prix franchit brièvement</li>
+                                <li>Volume faible</li>
+                                <li>Le prix revient en arrière</li>
+                                <li>💀 Trade PERDANT</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: LES 5 FEATURES -->
+        <section id="features" class="section">
+            <div class="section-header">
+                <h2>🎯 Les 5 Features (Indicateurs)</h2>
+                <p class="section-subtitle">Les 5 chiffres que l'IA analyse pour prendre sa décision</p>
+            </div>
+
+            <div class="features-container">
+                <!-- Feature 1 -->
+                <div class="feature-card" onclick="showFeatureDetail(0)">
+                    <div class="feature-header">
+                        <span class="feature-number">1</span>
+                        <h3>Slope (Pente)</h3>
+                    </div>
+                    <div class="feature-visualization" id="feature-slope">
+                        <svg viewBox="0 0 200 100"></svg>
+                    </div>
+                    <p class="feature-desc">La pente de la trendline normalisée par l'ATR</p>
+                    <div class="feature-intuition">
+                        💡 <strong>Intuition :</strong> Un breakout en tendance haussière a plus de chances de réussir
+                    </div>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="feature-card" onclick="showFeatureDetail(1)">
+                    <div class="feature-header">
+                        <span class="feature-number">2</span>
+                        <h3>Trendline Error</h3>
+                    </div>
+                    <div class="feature-visualization" id="feature-tlerr">
+                        <svg viewBox="0 0 200 100"></svg>
+                    </div>
+                    <p class="feature-desc">Distance moyenne entre les prix et la trendline</p>
+                    <div class="feature-intuition">
+                        💡 <strong>Intuition :</strong> Plus les prix "collent" à la ligne, plus le breakout est puissant
+                    </div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="feature-card" onclick="showFeatureDetail(2)">
+                    <div class="feature-header">
+                        <span class="feature-number">3</span>
+                        <h3>Max Distance</h3>
+                    </div>
+                    <div class="feature-visualization" id="feature-maxdist">
+                        <svg viewBox="0 0 200 100"></svg>
+                    </div>
+                    <p class="feature-desc">Distance maximale d'un point à la trendline</p>
+                    <div class="feature-intuition">
+                        💡 <strong>Intuition :</strong> Si le prix vient de trop loin, les acheteurs sont épuisés
+                    </div>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="feature-card" onclick="showFeatureDetail(3)">
+                    <div class="feature-header">
+                        <span class="feature-number">4</span>
+                        <h3>Volume</h3>
+                    </div>
+                    <div class="feature-visualization" id="feature-volume">
+                        <svg viewBox="0 0 200 100"></svg>
+                    </div>
+                    <p class="feature-desc">Volume du breakout comparé à la moyenne</p>
+                    <div class="feature-intuition">
+                        💡 <strong>Intuition :</strong> Un fort volume prouve que des institutions achètent
+                    </div>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="feature-card" onclick="showFeatureDetail(4)">
+                    <div class="feature-header">
+                        <span class="feature-number">5</span>
+                        <h3>ADX</h3>
+                    </div>
+                    <div class="feature-visualization" id="feature-adx">
+                        <svg viewBox="0 0 200 100"></svg>
+                    </div>
+                    <p class="feature-desc">Force de la tendance (0-100)</p>
+                    <div class="feature-intuition">
+                        💡 <strong>Intuition :</strong> ADX > 25 = tendance forte, breakout plus fiable
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal pour détails des features -->
+            <div class="feature-modal" id="feature-modal">
+                <div class="modal-content">
+                    <span class="modal-close" onclick="closeFeatureModal()">&times;</span>
+                    <div id="feature-modal-body"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 6: ARBRE DE DÉCISION -->
+        <section id="decision-tree" class="section">
+            <div class="section-header">
+                <h2>🌳 L'Arbre de Décision</h2>
+                <p class="section-subtitle">Comment l'IA prend sa décision étape par étape</p>
+            </div>
+
+            <div class="tree-demo">
+                <div class="demo-controls">
+                    <button class="btn-control" onclick="startTreeWalkthrough()">🚀 Démarrer la Décision</button>
+                    <button class="btn-control" onclick="resetTree()">🔄 Reset</button>
+                </div>
+
+                <div class="tree-container" id="tree-container">
+                    <svg viewBox="0 0 800 500" id="tree-svg">
+                        <!-- Arbre généré par JS -->
+                    </svg>
+                </div>
+
+                <div class="tree-explanation" id="tree-explanation">
+                    <p class="explanation-text">Cliquez sur "Démarrer la Décision" pour voir comment l'arbre analyse un breakout</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 7: RANDOM FOREST -->
+        <section id="random-forest" class="section">
+            <div class="section-header">
+                <h2>🌲 La Forêt Aléatoire (Random Forest)</h2>
+                <p class="section-subtitle">1000 arbres qui votent ensemble pour une décision plus fiable</p>
+            </div>
+
+            <div class="forest-demo">
+                <div class="demo-controls">
+                    <button class="btn-control" onclick="startForestVote()">🗳️ Lancer le Vote</button>
+                    <button class="btn-control" onclick="resetForest()">🔄 Reset</button>
+                </div>
+
+                <div class="forest-container">
+                    <div class="forest-visualization" id="forest-viz">
+                        <!-- Les arbres seront générés ici -->
+                    </div>
+
+                    <div class="vote-result" id="vote-result">
+                        <h3>Résultat du Vote</h3>
+                        <div class="vote-bars">
+                            <div class="vote-bar-container">
+                                <div class="vote-bar win" id="win-bar" style="width: 0%"></div>
+                                <span class="vote-label">WIN</span>
+                            </div>
+                            <div class="vote-bar-container">
+                                <div class="vote-bar loss" id="loss-bar" style="width: 0%"></div>
+                                <span class="vote-label">LOSS</span>
+                            </div>
+                        </div>
+                        <div class="vote-decision" id="vote-decision">
+                            En attente du vote...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="forest-explanation">
+                    <h3>🤔 Pourquoi une Forêt ?</h3>
+                    <div class="explanation-grid">
+                        <div class="explanation-item">
+                            <h4>🎲 Diversité</h4>
+                            <p>Chaque arbre voit des données légèrement différentes (bagging)</p>
+                        </div>
+                        <div class="explanation-item">
+                            <h4>🛡️ Robustesse</h4>
+                            <p>Un seul arbre peut se tromper, mais 1000 arbres rarement</p>
+                        </div>
+                        <div class="explanation-item">
+                            <h4>⚖️ Moyenne</h4>
+                            <p>Le "bruit" statistique s'annule dans le vote collectif</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 8: COMPARAISON -->
+        <section id="comparison" class="section">
+            <div class="section-header">
+                <h2>⚖️ Comparaison : Avant vs Après IA</h2>
+                <p class="section-subtitle">Voyez la différence entre la stratégie simple et la stratégie filtrée par ML</p>
+            </div>
+
+            <div class="comparison-demo">
+                <div class="demo-controls">
+                    <button class="btn-control" onclick="runComparison()">📊 Lancer la Simulation</button>
+                </div>
+
+                <div class="comparison-container">
+                    <div class="comparison-chart">
+                        <h3>📈 Stratégie Simple (Sans IA)</h3>
+                        <div class="chart-wrapper" id="chart-simple"></div>
+                        <div class="stats-bad">
+                            <span class="stat">Win Rate: <strong>~50%</strong></span>
+                            <span class="stat">Profit Factor: <strong>~1.02</strong></span>
+                            <span class="stat">Trades: <strong>Tous</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="comparison-chart">
+                        <h3>🤖 Stratégie avec IA (Meta-Labeling)</h3>
+                        <div class="chart-wrapper" id="chart-ml"></div>
+                        <div class="stats-good">
+                            <span class="stat">Win Rate: <strong>~55-60%</strong></span>
+                            <span class="stat">Profit Factor: <strong>~1.3-1.5</strong></span>
+                            <span class="stat">Trades: <strong>Sélectionnés</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-summary">
+                    <h3>📊 Résumé de l'Amélioration</h3>
+                    <div class="improvement-grid">
+                        <div class="improvement-card">
+                            <span class="improvement-label">Moins de trades</span>
+                            <span class="improvement-value">-30%</span>
+                            <span class="improvement-note">Mais de meilleure qualité</span>
+                        </div>
+                        <div class="improvement-card">
+                            <span class="improvement-label">Win Rate</span>
+                            <span class="improvement-value">+10-15%</span>
+                            <span class="improvement-note">Meilleure sélection</span>
+                        </div>
+                        <div class="improvement-card">
+                            <span class="improvement-label">Profit Factor</span>
+                            <span class="improvement-value">x1.5</span>
+                            <span class="improvement-note">Presque doublé</span>
+                        </div>
+                        <div class="improvement-card">
+                            <span class="improvement-label">Profit Net</span>
+                            <span class="improvement-value">+50%</span>
+                            <span class="improvement-note">À risque réduit</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="main-footer">
+            <p>🎓 Guide Interactif - Trendline Breakout & Machine Learning</p>
+            <p>Créé pour comprendre pas à pas le fonctionnement d'une stratégie de trading algorithmique</p>
+        </footer>
+
+    </main>
+
+    <script src="js/animations.js"></script>
+</body>
+</html>

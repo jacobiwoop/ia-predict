@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trading Strategy Docs - Stratégie Simple</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://unpkg.com/lightweight-charts@4.1.x/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+      .strategy-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .chart-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+      }
+
+      .chart-box {
+        width: 100%;
+        height: 400px;
+        margin-top: 1rem;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo">
+          <span style="font-size: 1.5rem">📈</span> ML Trading Bot
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html">01. Accueil</a></li>
+          <li>
+            <a href="02_strategie_simple.html" class="active">02. Stratégie</a>
+          </li>
+          <li><a href="03_lignes_tendance.html">03. Trendlines</a></li>
+          <li><a href="04_dataset_trades.html">04. Dataset ML</a></li>
+          <li><a href="05_features.html">05. Features</a></li>
+          <li><a href="06_meta_labeling.html">06. Meta-Labeling</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Contenu Principal -->
+    <main class="main-content">
+      <div class="strategy-container">
+        <div>
+          <h1>La Stratégie de Base (Sans Machine Learning)</h1>
+          <p class="text-secondary mt-2">
+            Avant de parler d'Intelligence Artificielle, il faut construire une
+            stratégie de trading algorithmique robuste. Notre système base ses
+            décisions sur un
+            <strong>canal de tendance calculé mathématiquement</strong>.
+          </p>
+        </div>
+
+        <section class="grid grid-2">
+          <div class="card">
+            <h3 style="color: var(--accent-green); margin-bottom: 1rem">
+              Signal LONG (Achat) 🟢
+            </h3>
+            <p>
+              Le système génère un signal d'achat +1 lorsque le prix de clôture
+              actuel (Close) <strong>franchit à la hausse</strong> la ligne de
+              Résistance.
+            </p>
+            <pre><code>if close[i] > resist_val:
+    signal = 1</code></pre>
+          </div>
+
+          <div class="card">
+            <h3 style="color: var(--accent-red); margin-bottom: 1rem">
+              Signal SHORT (Vente) 🔴
+            </h3>
+            <p>
+              Le système génère un signal de vente -1 lorsque le prix de clôture
+              actuel (Close) <strong>franchit à la baisse</strong> la ligne de
+              Support.
+            </p>
+            <pre><code>elif close[i] < support_val:
+    signal = -1</code></pre>
+          </div>
+        </section>
+
+        <div class="callout callout-info">
+          <div class="callout-title">💡 Conservation du Signal</div>
+          Tant qu'il n'y a pas de nouvelle cassure, le système garde sa position
+          précédente (le signal reste à +1 ou -1 dans l'algorithme).
+        </div>
+
+        <section class="chart-section">
+          <h2>Visualisation : Le Canal et les Cassures</h2>
+          <p class="text-secondary">
+            Ce graphique interactif simule le comportement du prix à l'intérieur
+            d'un canal, avec la détection basique de faux et vrais breakouts.
+          </p>
+          <div class="chart-box" id="strategy-chart"></div>
+        </section>
+
+        <section>
+          <h2 class="mt-4 mb-2">
+            Les Limites de cette Approche (Backtest Naïf)
+          </h2>
+          <p>
+            Dans la vraie vie, trader tous les signaux donnés par les cassures
+            de trendlines n'est pas rentable. Voici les résultats approximatifs
+            si on applique cette stratégie basique sans aucun filtre :
+          </p>
+
+          <div class="table-container mt-3">
+            <table>
+              <thead>
+                <tr>
+                  <th>Métrique</th>
+                  <th>Résultat</th>
+                  <th>Analyse</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Taux de réussite (Win Rate)</strong></td>
+                  <td>~ 50.5%</td>
+                  <td>Près du hasard (pile ou face)</td>
+                </tr>
+                <tr>
+                  <td><strong>Facteur de Profit (Profit Factor)</strong></td>
+                  <td>1.02</td>
+                  <td>On gagne à peine plus qu'on ne perd.</td>
+                </tr>
+                <tr>
+                  <td><strong>Profit Net</strong></td>
+                  <td>Léger positif</td>
+                  <td>
+                    Insuffisant pour couvrir les frais de trading réguliers.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout callout-warning mt-3">
+            <div class="callout-title">La Conclusion</div>
+            La stratégie de base détecte mathématiquement bien les cassures,
+            mais il y a beaucoup trop de <strong>faux breakouts</strong> (les
+            "fake-outs"). Il nous faut un filtre intelligent. C'est là que le
+            Machine Learning (Meta-Labeling) va intervenir.
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script src="js/theme_config.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const chartContainer = document.getElementById("strategy-chart");
+        const chart = LightweightCharts.createChart(
+          chartContainer,
+          window.chartDarkTheme,
+        );
+
+        const candlestickSeries = chart.addCandlestickSeries({
+          upColor: "#26a69a",
+          downColor: "#ef5350",
+          borderVisible: false,
+          wickUpColor: "#26a69a",
+          wickDownColor: "#ef5350",
+        });
+
+        // Lignes de tendance
+        const resistanceLine = chart.addLineSeries({
+          color: "#f85149",
+          lineWidth: 2,
+          lineStyle: 2,
+          title: "Résistance",
+        });
+        const supportLine = chart.addLineSeries({
+          color: "#3fb950",
+          lineWidth: 2,
+          lineStyle: 2,
+          title: "Support",
+        });
+
+        // Génération de data spécifique pour ce chapitre : Un canal (support/resistance)
+        const candles = [];
+        const rLine = [];
+        const sLine = [];
+
+        let time = new Date("2024-02-01T00:00:00Z").getTime() / 1000;
+        let currentPrice = 50000;
+        const resSlope = 10;
+        const supSlope = 10;
+        let resBase = 50500;
+        let supBase = 49500;
+
+        for (let i = 0; i < 150; i++) {
+          const open = currentPrice;
+          let close = open + (Math.random() - 0.5) * 150;
+
+          const curRes = resBase + i * resSlope;
+          const curSup = supBase + i * supSlope;
+
+          // Simulation comportement prix
+          if (i === 60) {
+            // Faux Breakout Haut
+            close = curRes + 150;
+          } else if (i === 61 || i === 62) {
+            // Rejet massif (fakeout)
+            close = curRes - 200;
+          } else if (i === 120) {
+            // Vrai Breakout Haut
+            close = curRes + 300;
+          } else if (i > 120) {
+            // Tendance soutenue post-breakout
+            close = open + 100 + Math.random() * 100;
+          } else {
+            // Contraint dans le canal
+            if (close > curRes - 50) close = curRes - 100;
+            if (close < curSup + 50) close = curSup + 100;
+          }
+
+          const high = Math.max(open, close) + 50;
+          const low = Math.min(open, close) - 50;
+
+          candles.push({ time, open, high, low, close });
+          rLine.push({ time, value: curRes });
+          if (i <= 125) sLine.push({ time, value: curSup }); // Stop support after a while
+
+          currentPrice = close;
+          time += 3600; // +1h
+        }
+
+        candlestickSeries.setData(candles);
+        resistanceLine.setData(rLine);
+        supportLine.setData(sLine);
+
+        candlestickSeries.setMarkers([
+          {
+            time: candles[60].time,
+            position: "aboveBar",
+            color: "#d29922",
+            shape: "arrowDown",
+            text: "FAUX BREAKOUT",
+            size: 1,
+          },
+          {
+            time: candles[120].time,
+            position: "belowBar",
+            color: "#3fb950",
+            shape: "arrowUp",
+            text: "VRAI BREAKOUT (LONG)",
+            size: 2,
+          },
+        ]);
+
+        chart.timeScale().fitContent();
+
+        const ro = new ResizeObserver((entries) => {
+          const cr = entries[0].contentRect;
+          chart.applyOptions({ width: cr.width, height: cr.height });
+        });
+        ro.observe(chartContainer);
+      });
+    </script>
+  </body>
+</html>

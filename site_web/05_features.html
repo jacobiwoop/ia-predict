@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trading Strategy Docs - Les 5 Features</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo">
+          <span style="font-size: 1.5rem">📈</span> ML Trading Bot
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html">01. Accueil</a></li>
+          <li><a href="02_strategie_simple.html">02. Stratégie</a></li>
+          <li><a href="03_lignes_tendance.html">03. Trendlines</a></li>
+          <li><a href="04_dataset_trades.html">04. Dataset ML</a></li>
+          <li><a href="05_features.html" class="active">05. Features</a></li>
+          <li><a href="06_meta_labeling.html">06. Meta-Labeling</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Contenu Principal -->
+    <main class="main-content">
+      <h1>Les 5 Indicateurs (Features)</h1>
+      <p class="text-secondary mt-2">
+        Notre modèle IA n'analyse pas l'image du graphique. Il prend sa décision
+        uniquement sur la base de ces
+        <strong>5 chiffres précis</strong> (calculés exactement au moment de la
+        cassure).
+      </p>
+
+      <section class="grid grid-2 mt-4">
+        <!-- Feature 1 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon blue">📈</div>
+            <h3>1. Slope (resist_s / supp_s)</h3>
+          </div>
+          <p>
+            <strong>C'est quoi ?</strong> La pente de la ligne de tendance
+            normalisée par l'ATR.
+          </p>
+          <div class="callout callout-info mt-2">
+            <div class="callout-title">L'intuition de l'IA</div>
+            Un breakout vers le haut fonctionne beaucoup mieux si la ligne de
+            résistance complète elle-même une pente ascendante (tendace
+            haussière de fond).
+          </div>
+          <pre><code>resist_s = resistance_slope / atr</code></pre>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon purple">🎯</div>
+            <h3>2. Erreur Moyenne (tl_err)</h3>
+          </div>
+          <p>
+            <strong>C'est quoi ?</strong> La distance moyenne entre tous les
+            prix de clôture récents et la ligne de tendance.
+          </p>
+          <div class="callout callout-success mt-2">
+            <div class="callout-title">L'intuition de l'IA</div>
+            Si les prix "collent" parfaitement à la ligne (tl_err faible), la
+            ligne de tendance est très respectée par le marché. La cassure n'en
+            sera que plus puissante.
+          </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon red">📏</div>
+            <h3>3. Distance Max (max_dist)</h3>
+          </div>
+          <p>
+            <strong>C'est quoi ?</strong> La distance entre le point d'ancrage
+            le plus éloigné de la ligne et le prix actuel.
+          </p>
+          <div class="callout callout-warning mt-2">
+            <div class="callout-title">L'intuition de l'IA</div>
+            Si le prix vient de trop loin (énorme distance max) pour casser la
+            résistance, les acheteurs sont épuisés. C'est le signe classique
+            d'un faux breakout.
+          </div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon green">📊</div>
+            <h3>4. Volume Normalisé (vol)</h3>
+          </div>
+          <p>
+            <strong>C'est quoi ?</strong> Le volume de la bougie du breakout
+            comparé au volume de la bougie précédente.
+          </p>
+          <div class="callout callout-success mt-2">
+            <div class="callout-title">L'intuition de l'IA</div>
+            Une cassure confirmée par au moins 1.5x à 2x le volume habituel
+            prouve que la cassure est soutenue par les institutions et n'est pas
+            un piège.
+          </div>
+          <pre><code>vol = current_volume / previous_volume</code></pre>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="card" style="grid-column: span 2">
+          <div class="card-header">
+            <div class="card-icon yellow">🌪️</div>
+            <h3>5. ADX (Average Directional Index)</h3>
+          </div>
+          <p>
+            <strong>C'est quoi ?</strong> Un indicateur standard mesurant la
+            force de la tendance globale (de 0 à 100).
+          </p>
+          <div class="callout callout-info mt-2">
+            <div class="callout-title">L'intuition de l'IA</div>
+            L'ADX ne dit pas si ça monte ou ça baisse, mais si la tendance est
+            <em>forte</em>. Un breakout sans ADX (> 25) échouera souvent car le
+            marché est amorphe / en range.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/theme_config.js"></script>
+  </body>
+</html>

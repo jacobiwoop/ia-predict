@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trading Strategy Docs - Accueil</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <!-- Lightweight Charts via CDN -->
+    <script src="https://unpkg.com/lightweight-charts@4.1.x/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+      .presentation-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        margin-bottom: 3rem;
+      }
+
+      .text-content {
+        flex: 1;
+      }
+
+      .chart-preview {
+        flex: 1;
+        height: 350px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .status-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+      }
+
+      .interactive-demo {
+        text-align: center;
+        margin-top: 3rem;
+        padding: 2rem;
+        background: rgba(88, 166, 255, 0.05);
+        border-radius: 12px;
+        border: 1px dashed var(--accent-blue);
+      }
+
+      @media (max-width: 900px) {
+        .presentation-banner {
+          flex-direction: column;
+        }
+        .chart-preview {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo">
+          <span style="font-size: 1.5rem">📈</span> ML Trading Bot
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html" class="active">01. Accueil</a></li>
+          <li><a href="02_strategie_simple.html">02. Stratégie</a></li>
+          <li><a href="03_lignes_tendance.html">03. Trendlines</a></li>
+          <li><a href="04_dataset_trades.html">04. Dataset ML</a></li>
+          <li><a href="05_features.html">05. Features</a></li>
+          <li><a href="06_meta_labeling.html">06. Meta-Labeling</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Contenu Principal -->
+    <main class="main-content">
+      <header class="hero">
+        <h1>Trendline Breakout & Machine Learning</h1>
+        <p>
+          Découvrez comment construire un bot de trading intelligent qui détecte
+          automatiquement les cassures de lignes de tendance et utilise le
+          Meta-Labeling (Random Forest) pour filtrer les faux signaux.
+        </p>
+        <div class="hero-buttons">
+          <a href="02_strategie_simple.html" class="btn btn-primary"
+            >Débuter le cours 🚀</a
+          >
+          <a href="#demo" class="btn btn-secondary">Voir une démo 👇</a>
+        </div>
+      </header>
+
+      <section class="presentation-banner" id="demo">
+        <div class="text-content">
+          <h2 style="color: var(--accent-blue); margin-bottom: 1rem">
+            La Problématique du Trading
+          </h2>
+          <p style="margin-bottom: 1rem; color: var(--text-secondary)">
+            Les <strong>breakouts</strong> (cassures de prix au-dessus d'une
+            résistance) sont des signaux puissants. Cependant, si on prend
+            <em>tous</em> les breakouts à l'aveugle, le taux de réussite (Win
+            Rate) plafonne souvent autour des 50%.
+          </p>
+          <div class="callout callout-danger mt-3">
+            <div class="callout-title">⚠️ Le danger : Le "Faux Breakout"</div>
+            Le prix dépasse brièvement la zone de résistance pour piéger les
+            acheteurs, puis rechute violemment.
+          </div>
+          <div class="callout callout-success mt-3">
+            <div class="callout-title">🤖 La solution : Meta-Labeling</div>
+            Entraîner un modèle mathématique à évaluer la
+            <em>probabilité de succès</em> d'un trade au moment exact du
+            breakout en analysant le volume, la pente et la volatilité.
+          </div>
+        </div>
+
+        <div class="chart-preview" id="intro-chart">
+          <span class="badge badge-success status-badge" id="chart-status"
+            >Détection de Breakout en cours...</span
+          >
+          <!-- Le graphique se chargera ici -->
+        </div>
+      </section>
+
+      <section class="grid grid-3 mt-4">
+        <div class="feature-card">
+          <div class="card-icon blue mb-2">📈</div>
+          <h3>Stratégie Algorithmique</h3>
+          <p class="feature-desc">
+            Une approche mathématique pour tracer automatiquement les canaux de
+            prix sans intervention humaine.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon purple mb-2">🧠</div>
+          <h3>Machine Learning</h3>
+          <p class="feature-desc">
+            Utilisation d'un modèle Random Forest pour ne garder que les
+            breakouts à forte probabilité (>50%).
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon green mb-2">🧪</div>
+          <h3>Backtesting Rigoureux</h3>
+          <p class="feature-desc">
+            Validation "Walk-forward" pour tester le système dans des conditions
+            réelles de marché non biaisées.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/theme_config.js"></script>
+    <script src="js/data_generator.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Configuration du container
+        const chartContainer = document.getElementById("intro-chart");
+        const statusBadge = document.getElementById("chart-status");
+
+        // Création du chart (Lightweight Charts)
+        const chart = LightweightCharts.createChart(
+          chartContainer,
+          window.chartDarkTheme,
+        );
+
+        // Série des bougies (Prix)
+        const candlestickSeries = chart.addCandlestickSeries({
+          upColor: "#26a69a",
+          downColor: "#ef5350",
+          borderVisible: false,
+          wickUpColor: "#26a69a",
+          wickDownColor: "#ef5350",
+        });
+
+        // Ligne de Résistance (custom line series)
+        const resistanceLine = chart.addLineSeries({
+          color: "#f85149",
+          lineWidth: 2,
+          lineStyle: LightweightCharts.LineStyle.Dashed,
+          title: "Resistance",
+          crosshairMarkerVisible: false,
+        });
+
+        // Générer des données via notre script helper (qui sera dans data_generator.js)
+        const data = window.generateIntroSeries(100);
+
+        // Appliquer les prix
+        candlestickSeries.setData(data.candles);
+
+        // Appliquer la ligne de tendance qui "plafonne" le prix puis se fait casser vers la fin
+        resistanceLine.setData(data.resistanceLine);
+
+        // Ajouter le marqueur de Breakout
+        candlestickSeries.setMarkers([
+          {
+            time: data.breakoutTime,
+            position: "aboveBar",
+            color: "#58a6ff",
+            shape: "arrowDown",
+            text: "BREAKOUT DÉTECTÉ",
+            size: 2,
+          },
+        ]);
+
+        chart.timeScale().fitContent();
+
+        // Petite animation du badge
+        setTimeout(() => {
+          statusBadge.textContent = "Breakout Validé par l'IA ✅";
+        }, 2000);
+
+        // Handle resize
+        const ro = new ResizeObserver((entries) => {
+          const cr = entries[0].contentRect;
+          chart.applyOptions({ width: cr.width, height: cr.height });
+        });
+        ro.observe(chartContainer);
+      });
+    </script>
+  </body>
+</html>

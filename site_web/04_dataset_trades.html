@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trading Strategy Docs - Dataset ML</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://unpkg.com/lightweight-charts@4.1.x/dist/lightweight-charts.standalone.production.js"></script>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo">
+          <span style="font-size: 1.5rem">📈</span> ML Trading Bot
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html">01. Accueil</a></li>
+          <li><a href="02_strategie_simple.html">02. Stratégie</a></li>
+          <li><a href="03_lignes_tendance.html">03. Trendlines</a></li>
+          <li>
+            <a href="04_dataset_trades.html" class="active">04. Dataset ML</a>
+          </li>
+          <li><a href="05_features.html">05. Features</a></li>
+          <li><a href="06_meta_labeling.html">06. Meta-Labeling</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Contenu Principal -->
+    <main class="main-content">
+      <h1>Création du Dataset d'Entraînement</h1>
+      <p class="text-secondary mt-2">
+        Pour entraîner notre IA (Random Forest), nous ne pouvons pas lui donner
+        un graphique brut. Il faut traduire chaque "Breakout" en une ligne de
+        données contenant des **Features** (les indicateurs au moment T) et un
+        **Label** (le résultat final du trade).
+      </p>
+
+      <section class="mt-4">
+        <h2>1. Isolation des Breakouts</h2>
+        <p>
+          Notre premier script a généré des milliers de signaux continus. Pour
+          le ML, on ne s'intéresse qu'au **moment précis du breakout** (quand le
+          signal passe de 0 à 1, ou de 1 à -1).
+        </p>
+
+        <div class="callout callout-info mt-2">
+          <div class="callout-title">Une ligne par trade</div>
+          Chaque breakout devient **UNE ligne (row)** dans notre fichier de
+          données final (le Dataset).
+        </div>
+      </section>
+
+      <section class="mt-4">
+        <h2>2. Calcul du Résultat du Trade (Le "Label")</h2>
+        <p>
+          Pour chaque breakout isolé, le script rejoue le trade en virtuel pour
+          voir s'il aurait été gagnant (`1`) ou perdant (`0`). Il utilise la
+          méthode de la "Hold Period" :
+        </p>
+
+        <ul class="steps mt-3" style="max-width: 800px; margin: 0 auto">
+          <li>
+            <strong>Stop Loss & Take Profit dynamiques</strong>
+            <div class="text-secondary">
+              On utilise l'ATR (Average True Range). TP = Prix Entrée + (3 ×
+              ATR)
+            </div>
+          </li>
+          <li>
+            <strong>Simulation temporelle maximale</strong>
+            <div class="text-secondary">
+              On "Hold" le trade pendant 12 bougies maximum.
+            </div>
+          </li>
+          <li>
+            <strong>Verdict du trade (Target)</strong>
+            <div class="text-secondary">
+              - Si TP touché -> <code>Label = 1 (Win)</code><br />
+              - Si SL touché -> <code>Label = 0 (Loss)</code><br />
+              - Si fin des 12 bougies -> Le gain est positif ? Si oui
+              <code>1</code>, sinon <code>0</code>.
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section class="mt-4">
+        <h2>Aperçu du Dataset Final (Le Tableau "X, y")</h2>
+
+        <div class="table-container mt-3">
+          <table>
+            <thead>
+              <tr>
+                <th>Date (Index)</th>
+                <th>
+                  resist_s<br /><span
+                    style="font-size: 0.75rem; color: var(--text-muted)"
+                    >Feature 1</span
+                  >
+                </th>
+                <th>
+                  tl_err<br /><span
+                    style="font-size: 0.75rem; color: var(--text-muted)"
+                    >Feature 2</span
+                  >
+                </th>
+                <th>
+                  max_dist<br /><span
+                    style="font-size: 0.75rem; color: var(--text-muted)"
+                    >Feature 3</span
+                  >
+                </th>
+                <th>
+                  vol<br /><span
+                    style="font-size: 0.75rem; color: var(--text-muted)"
+                    >Feature 4</span
+                  >
+                </th>
+                <th>
+                  adx<br /><span
+                    style="font-size: 0.75rem; color: var(--text-muted)"
+                    >Feature 5</span
+                  >
+                </th>
+                <th>
+                  <strong style="color: var(--accent-purple)">LABEL (y)</strong
+                  ><br /><span
+                    style="font-size: 0.75rem; color: var(--text-muted)"
+                    >0=Perdu, 1=Gagné</span
+                  >
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2021-01-01 10:00</td>
+                <td class="text-info">0.05</td>
+                <td class="text-info">0.01</td>
+                <td class="text-info">0.03</td>
+                <td class="text-info">1.2</td>
+                <td class="text-info">28</td>
+                <td><span class="badge badge-success">1 (WIN)</span></td>
+              </tr>
+              <tr>
+                <td>2021-01-02 15:00</td>
+                <td class="text-info">-0.02</td>
+                <td class="text-info">0.03</td>
+                <td class="text-info">0.08</td>
+                <td class="text-info">0.7</td>
+                <td class="text-info">12</td>
+                <td><span class="badge badge-danger">0 (LOSS)</span></td>
+              </tr>
+              <tr>
+                <td>2021-01-05 08:00</td>
+                <td class="text-info">0.12</td>
+                <td class="text-info">0.02</td>
+                <td class="text-info">0.04</td>
+                <td class="text-info">2.1</td>
+                <td class="text-info">42</td>
+                <td><span class="badge badge-success">1 (WIN)</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="mt-2 text-secondary text-center">
+          Ce dataset de milliers de lignes sera "glissé" (donné à manger) au
+          Random Forest pour qu'il comprenne de lui-même pourquoi la Ligne 1
+          Gagne et la Ligne 2 Perd.
+        </p>
+      </section>
+    </main>
+
+    <script src="js/theme_config.js"></script>
+  </body>
+</html>

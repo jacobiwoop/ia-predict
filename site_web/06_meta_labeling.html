@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trading Strategy Docs - Meta-Labeling (Random Forest)</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      .tree-schema {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        margin: 2rem 0;
+        text-align: center;
+        overflow-x: auto;
+      }
+
+      .tree-node {
+        display: inline-block;
+        background: var(--bg-hover);
+        border: 2px solid var(--accent-blue);
+        color: var(--text-primary);
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        margin: 0.5rem;
+        font-weight: 600;
+        position: relative;
+      }
+
+      .tree-leaf-win {
+        border-color: var(--accent-green);
+        background: rgba(63, 185, 80, 0.1);
+      }
+
+      .tree-leaf-loss {
+        border-color: var(--accent-red);
+        background: rgba(248, 81, 73, 0.1);
+      }
+
+      .tree-level {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin: 1rem 0;
+        position: relative;
+      }
+
+      .connector {
+        width: 2px;
+        height: 30px;
+        background: var(--border-color);
+        margin: 0 auto;
+      }
+
+      .forest-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+      }
+
+      .mini-tree {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo">
+          <span style="font-size: 1.5rem">📈</span> ML Trading Bot
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html">01. Accueil</a></li>
+          <li><a href="02_strategie_simple.html">02. Stratégie</a></li>
+          <li><a href="03_lignes_tendance.html">03. Trendlines</a></li>
+          <li><a href="04_dataset_trades.html">04. Dataset ML</a></li>
+          <li><a href="05_features.html">05. Features</a></li>
+          <li>
+            <a href="06_meta_labeling.html" class="active">06. Meta-Labeling</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Contenu Principal -->
+    <main class="main-content">
+      <h1>Le Meta-Labeling en Action</h1>
+      <p class="text-secondary mt-2">
+        La pièce maîtresse du système ! Au lieu de prédire directement si le
+        marché va monter ou descendre, notre modèle Machine Learning (Random
+        Forest) va observer le signal d'achat de la Stratégie Base, et
+        <strong
+          >prédire si ce signal spécifique a de bonnes chances d'être
+          gagnant.</strong
+        >
+        C'est ça le Meta-Labeling.
+      </p>
+
+      <section class="mt-4">
+        <h2>1. Au coeur de l'IA : L'Arbre de Décision (Decision Tree)</h2>
+        <p>
+          Un modèle "Random Forest" (forêt aléatoire) est composé de milliers
+          d'arbres de décision simples. Voici comment réfléchit un
+          <strong
+            >arbre unique limité à une profondeur de 3 (max_depth=3)</strong
+          >
+          :
+        </p>
+
+        <div class="tree-schema">
+          <div class="tree-node">Volume > 1.5x ?</div>
+
+          <div style="display: flex; justify-content: center; gap: 15rem">
+            <div>
+              <div class="connector"></div>
+              <span class="badge badge-success mb-1">OUI</span>
+              <div class="tree-node">ADX > 25 ?</div>
+            </div>
+            <div>
+              <div class="connector"></div>
+              <span class="badge badge-danger mb-1">NON</span>
+              <div class="tree-node" style="opacity: 0.6">
+                Distance Max > 0.05 ?
+              </div>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              justify-content: center;
+              gap: 5rem;
+              margin-top: 1rem;
+              margin-left: -15rem;
+            "
+          >
+            <div>
+              <div class="connector"></div>
+              <span class="badge badge-success mb-1">OUI</span>
+              <div class="tree-node tree-leaf-win">
+                ✅ WIN<br />
+                <span class="text-secondary" style="font-size: 0.8rem"
+                  >Confiance 85%</span
+                >
+              </div>
+            </div>
+            <div>
+              <div class="connector"></div>
+              <span class="badge badge-danger mb-1">NON</span>
+              <div class="tree-node tree-leaf-loss">
+                ❌ LOSS<br />
+                <span class="text-secondary" style="font-size: 0.8rem"
+                  >Confiance 60%</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">Le problème de l'Arbre unique</div>
+          Un seul arbre a tendance à l'<strong>Overfitting</strong> (il apprend
+          le bruit par cœur) ou est trop rigide. Si le Volume est à 1.49x,
+          l'arbre dit NON, alors que c'est presque 1.5x.
+        </div>
+      </section>
+
+      <section class="mt-4">
+        <h2>2. La Puissance de la Forêt (Random Forest)</h2>
+        <p>
+          Pour éviter les erreurs d'un seul arbre, on entraine
+          <strong>1000 arbres de décision différents !</strong> Chacun voit une
+          partie légèrement différente des données (bagging). Le résultat final
+          est la <strong>MOYENNE</strong> de tous les arbres. Le "bruit"
+          statistique s'annule naturellement.
+        </p>
+
+        <div class="forest-container">
+          <div class="mini-tree">
+            🌳 Arbre #1<br /><span class="text-success mt-1 visible"
+              >70% Win</span
+            >
+          </div>
+          <div class="mini-tree">
+            🌳 Arbre #2<br /><span class="text-danger mt-1 visible"
+              >45% Win</span
+            >
+          </div>
+          <div class="mini-tree">
+            🌳 Arbre #3<br /><span class="text-success mt-1 visible"
+              >65% Win</span
+            >
+          </div>
+          <div class="mini-tree">
+            🌳 Arbre #...<br /><span class="text-muted mt-1 visible">...%</span>
+          </div>
+          <div
+            class="mini-tree"
+            style="
+              border-color: var(--accent-blue);
+              background: rgba(88, 166, 255, 0.1);
+            "
+          >
+            <strong>⚖️ VOTE FINAL</strong><br />
+            <span class="text-primary mt-1 visible" style="font-size: 1.2rem"
+              >60% de chances de WIN</span
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-4">
+        <h2>3. Le Seuil de Décision (Le Filtrage Final)</h2>
+
+        <div class="grid grid-2 mt-3">
+          <div class="card">
+            <h3 style="color: var(--accent-green)">PRENDRE LE TRADE ✅</h3>
+            <p class="mt-2 text-secondary">
+              Si le modèle IA indique une probabilité
+              <code>prob > 0.50</code> (soit + de 50%), le système valide le
+              signal et entre en position réelle.
+            </p>
+          </div>
+          <div class="card">
+            <h3 style="color: var(--text-muted)">IGNORER LE TRADE ❌</h3>
+            <p class="mt-2 text-secondary">
+              Si <code>prob ≤ 0.50</code>, même si la stratégie de base
+              signalait une belle cassure, le robot l'ignore. C'est un filtre
+              probabiliste impitoyable.
+            </p>
+          </div>
+        </div>
+
+        <div class="callout callout-info mt-3">
+          <div class="callout-title">Une affaire de compromis</div>
+          Régler le seuil à <code>0.60</code> (60%) réduira drastiquement votre
+          nombre de trades, mais ils seront d'excellente qualité. Un réglage
+          classique à <code>0.50</code> ou <code>0.52</code> suffit souvent à
+          rendre profitable une stratégie perdante.
+        </div>
+      </section>
+
+      <section class="mt-4 text-center">
+        <h2 class="mb-2">Félicitations ! 🎉</h2>
+        <p class="text-secondary">
+          Vous avez terminé la lecture de la documentation technique. Vous
+          comprenez maintenant comment une IA peut superviser des signaux
+          mathématiques classiques pour en extraire des profits d'une manière
+          incroyablement statistique.
+        </p>
+        <a href="index.html" class="btn btn-primary mt-3"
+          >Retour à l'accueil du cours</a
+        >
+      </section>
+    </main>
+
+    <script src="js/theme_config.js"></script>
+  </body>
+</html>

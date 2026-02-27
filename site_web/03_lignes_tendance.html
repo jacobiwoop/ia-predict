@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trading Strategy Docs - Calcul des Lignes de Tendance</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://unpkg.com/lightweight-charts@4.1.x/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+      .formula-box {
+        background: rgba(88, 166, 255, 0.05);
+        border-left: 4px solid var(--accent-blue);
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border-radius: 0 8px 8px 0;
+        font-family: "Fira Code", monospace;
+        font-size: 1.1rem;
+        color: var(--accent-blue);
+      }
+
+      .chart-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+      }
+
+      .chart-box {
+        width: 100%;
+        height: 400px;
+        margin-top: 1rem;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo">
+          <span style="font-size: 1.5rem">📈</span> ML Trading Bot
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html">01. Accueil</a></li>
+          <li><a href="02_strategie_simple.html">02. Stratégie</a></li>
+          <li>
+            <a href="03_lignes_tendance.html" class="active">03. Trendlines</a>
+          </li>
+          <li><a href="04_dataset_trades.html">04. Dataset ML</a></li>
+          <li><a href="05_features.html">05. Features</a></li>
+          <li><a href="06_meta_labeling.html">06. Meta-Labeling</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Contenu Principal -->
+    <main class="main-content">
+      <h1>Comment Tracer les Lignes de Tendance ?</h1>
+      <p class="text-secondary mt-2">
+        L'ordinateur ne "voit" pas les lignes comme un humain. Il a besoin de
+        mathématiques rigoureuses pour déterminer le support et la résistance.
+        Ce chapitre explique comment nous transformons l'intuition visuelle en
+        un processus automatisé basé sur une fenêtre glissante (lookback).
+      </p>
+
+      <section class="mt-4">
+        <h2>1. La Fenêtre d'Observation (Lookback)</h2>
+        <p>
+          L'algorithme ne regarde pas tout l'historique du Bitcoin d'un seul
+          coup. Il regarde uniquement les
+          <strong>72 dernières bougies</strong> (soit 3 jours pour des bougies
+          horaires).
+        </p>
+
+        <div class="callout callout-info mt-2">
+          <div class="callout-title">Pourquoi 72 bougies ?</div>
+          C'est un compromis idéal testé via validation croisée. Trop court (ex:
+          10) = la ligne est trop nerveuse et change tout le temps. Trop long
+          (ex: 200) = la ligne est trop lente et rate les mouvements rapides.
+        </div>
+      </section>
+
+      <section class="mt-4">
+        <h2>2. Recherche des Points Pivots (Extrêmes)</h2>
+        <p>
+          Dans cette fenêtre de 72 bougies, le script cherche les points
+          remarquables :
+        </p>
+        <ul class="steps mt-3">
+          <li>
+            <strong>Trouver le point le plus haut</strong> (indice `i_max`) dans
+            la première moitié de la fenêtre.
+            <div class="text-secondary mt-1">
+              C'est notre premier point d'ancrage pour la Résistance.
+            </div>
+          </li>
+          <li>
+            <strong>Calculer la pente</strong> pour relier ce point au reste des
+            bougies.
+          </li>
+          <li>
+            On ajuste la pente pour que
+            <strong>la ligne touche au moins un autre sommet</strong> sans
+            jamais couper (traverser) le prix des 72 bougies.
+          </li>
+        </ul>
+
+        <div class="formula-box">
+          Équation de la droite : y = ax + b <br /><br />
+          <span style="color: var(--text-secondary); font-size: 0.9rem"
+            >(où 'a' est la pente et 'b' l'ordonnée d'ancrage sur le
+            pivot)</span
+          >
+        </div>
+      </section>
+
+      <section class="chart-section">
+        <h2>Démonstration Dynamique du Calcul</h2>
+        <p class="text-secondary">
+          Ce graphique illustre comment une ligne de résistance est ancrée sur
+          un Sommet Pivot et s'ajuste pour englober les prix sans les percer
+          (jusqu'au breakout final).
+        </p>
+        <div class="chart-box" id="trendline-chart"></div>
+      </section>
+
+      <section class="mt-4">
+        <h2>3. Conversion Logarithmique (Le Secret Mathématique)</h2>
+        <div class="card">
+          <p>
+            Au lieu de travailler sur les prix directs ($40,000, $41,000), le
+            script convertit tous les prix en
+            <strong>logarithme naturel (log)</strong>.
+          </p>
+          <h3 class="mt-3" style="color: var(--accent-purple)">
+            Pourquoi utiliser log(Prix) ?
+          </h3>
+          <p class="mt-2 text-secondary">
+            Une augmentation de $10 à $11 (+10%) n'a pas la même valeur absolue
+            qu'une augmentation de $1000 à $1100 (+10%). En passant en log, les
+            mouvements de prix sont normalisés en <strong>pourcentages</strong>.
+            Une ligne droite sur une échelle log représente un pourcentage de
+            croissance constant.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/theme_config.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const chartContainer = document.getElementById("trendline-chart");
+        const chart = LightweightCharts.createChart(
+          chartContainer,
+          window.chartDarkTheme,
+        );
+
+        const candleSeries = chart.addCandlestickSeries({
+          upColor: "#26a69a",
+          downColor: "#ef5350",
+          borderVisible: false,
+          wickUpColor: "#26a69a",
+          wickDownColor: "#ef5350",
+        });
+
+        const resistanceLine = chart.addLineSeries({
+          color: "#58a6ff",
+          lineWidth: 3,
+          title: "Résistance Calculée",
+        });
+
+        const candles = [];
+        const rLine = [];
+
+        let time = new Date("2024-03-01T00:00:00Z").getTime() / 1000;
+        let startPrice = 60000;
+        const volatility = 200;
+
+        for (let i = 0; i < 72; i++) {
+          let open = startPrice;
+          let close;
+
+          if (i <= 10) {
+            close = open + 300;
+          } else {
+            close = open - 150 + (Math.random() * volatility - volatility / 2);
+          }
+
+          const high = Math.max(open, close) + 100;
+          const low = Math.min(open, close) - 100;
+
+          candles.push({ time, open, high, low, close });
+          startPrice = close;
+          time += 3600;
+        }
+
+        const pivotIndex = 10;
+        const pivotValue = candles[pivotIndex].high;
+        const pente = -150;
+
+        for (let i = 0; i < 72; i++) {
+          if (i >= pivotIndex) {
+            const lineVal = pivotValue + (i - pivotIndex) * pente;
+            rLine.push({ time: candles[i].time, value: lineVal });
+          }
+        }
+
+        candleSeries.setData(candles);
+        resistanceLine.setData(rLine);
+
+        candleSeries.setMarkers([
+          {
+            time: candles[pivotIndex].time,
+            position: "aboveBar",
+            color: "#a371f7",
+            shape: "circle",
+            text: "1. POINT PIVOT",
+            size: 1.5,
+          },
+          {
+            time: candles[40].time,
+            position: "aboveBar",
+            color: "#58a6ff",
+            shape: "circle",
+            text: "2. Pente ajustée",
+            size: 1,
+          },
+        ]);
+
+        chart.timeScale().fitContent();
+
+        const ro = new ResizeObserver((entries) => {
+          const cr = entries[0].contentRect;
+          chart.applyOptions({ width: cr.width, height: cr.height });
+        });
+        ro.observe(chartContainer);
+      });
+    </script>
+  </body>
+</html>

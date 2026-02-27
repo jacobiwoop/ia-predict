@@ -1,0 +1,8 @@
+pandas>=2.0.0
+numpy
+pandas_ta
+matplotlib>=3.7.0
+mplfinance
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+lightgbm>=4.0.0
