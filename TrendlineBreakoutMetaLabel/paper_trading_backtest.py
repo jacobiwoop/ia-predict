@@ -42,12 +42,14 @@ def run_portfolio_simulation():
         print("❌ Aucune donnée de marché disponible.")
         return
 
+    from strategies.trendline_strategy import TrendlineBreakoutStrategy
+    strategy_instance = TrendlineBreakoutStrategy(lookback=72, hold_period=24)
+
     # 2. Exécuter le modèle d'Intelligence Artificielle sur l'historique
     print("🧠 Génération des prédictions Walk-Forward XGBoost...")
     results = walkforward_multi(
         pairs_data,
-        lookback    = 72,
-        hold_period = 24,
+        strategy    = strategy_instance,
         train_size  = 365 * 24 * 2,
         step_size   = 365 * 24,
         thresholds  = THRESHOLDS

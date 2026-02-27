@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pandas_ta as ta
 import matplotlib.pyplot as plt
-from trendline_break_dataset import trendline_breakout_dataset
 import xgboost as xgb
+from base_strategy import Strategy
 
 
 def walkforward_model(
@@ -101,7 +101,9 @@ if __name__ == '__main__':
     data = data.set_index('date')
     data = data.dropna()
 
-    trades, data_x, data_y = trendline_breakout_dataset(data, 72, hold_period=24)
+    from strategies.trendline_strategy import TrendlineBreakoutStrategy
+    strategy = TrendlineBreakoutStrategy(lookback=72, hold_period=24)
+    trades, data_x, data_y = strategy.generate_dataset(data)
 
     signal, dumb_signal, model = walkforward_model(
         np.log(data['close']).to_numpy(),

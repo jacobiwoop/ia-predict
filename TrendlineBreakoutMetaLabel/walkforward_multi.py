@@ -11,9 +11,9 @@ import numpy as np
 import pandas as pd
 import pandas_ta as ta
 import matplotlib.pyplot as plt
-from trendline_break_dataset import trendline_breakout_dataset
 import xgboost as xgb
 import os
+from base_strategy import Strategy
 
 
 def load_pair(filepath: str) -> pd.DataFrame:
@@ -29,8 +29,7 @@ def load_pair(filepath: str) -> pd.DataFrame:
 
 def walkforward_multi(
         pairs_data: dict,          # {'BTC': df, 'ETH': df, 'SOL': df}
-        lookback: int = 72,
-        hold_period: int = 24,     # Config A : 24h
+        strategy: Strategy,        # Instance de la stratégie à backtester
         train_size: int = 365*24*2,
         step_size: int  = 365*24,
         thresholds: dict = None    # Seuils ML optimisés par paire
@@ -48,9 +47,7 @@ def walkforward_multi(
 
     for name, df in pairs_data.items():
         print(f"  → {name} ({len(df)} bougies)")
-        trades, data_x, data_y = trendline_breakout_dataset(
-            df, lookback, hold_period=hold_period
-        )
+        trades, data_x, data_y = strategy.generate_dataset(df)
         all_trades[name] = trades
         all_data_x[name] = data_x
         all_data_y[name] = data_y
@@ -194,11 +191,14 @@ if __name__ == '__main__':
 
     print(f"\n→ Paires disponibles : {list(pairs_data.keys())}")
 
+    # Import de la stratégie originale pour le test
+    from strategies.trendline_strategy import TrendlineBreakoutStrategy
+    strategy_instance = TrendlineBreakoutStrategy(lookback=72, hold_period=24)
+
     # ── Walk-forward multi-paires ────────────────────────────────────────────
     results = walkforward_multi(
         pairs_data,
-        lookback     = 72,
-        hold_period  = 24,
+        strategy     = strategy_instance,
         train_size   = 365 * 24 * 2,
         step_size    = 365 * 24
     )
@@ -259,7 +259,7 @@ if __name__ == '__main__':
 
 
 # ── Ajout V75 : fonction d'analyse séparée ───────────────────────────────────
-def analyze_v75_separately(v75_data: pd.DataFrame, model, lookback=72, hold_period=24):
+def analyze_v75_separately(v75_data: pd.DataFrame, model, strategy: Strategy):
     """
     Analyse le V75 avec un modèle entraîné sur BTC/ETH/SOL.
     Retourne les résultats ET un avertissement sur la fiabilité.
@@ -274,9 +274,7 @@ def analyze_v75_separately(v75_data: pd.DataFrame, model, lookback=72, hold_peri
     print("  Ces résultats sont indicatifs seulement.")
     print("="*55)
 
-    trades, data_x, data_y = trendline_breakout_dataset(
-        v75_data, lookback, hold_period=hold_period
-    )
+    trades, data_x, data_y = strategy.generate_dataset(v75_data)
     trades = trades.dropna()
 
     if len(trades) == 0:
@@ -334,13 +332,15 @@ if __name__ == '__main__' and False:  # changer False → True pour activer
         if os.path.exists(path): pairs_data[sym] = load_pair(path)
 
     # Entraîner sur BTC+ETH+SOL
-    results = walkforward_multi(pairs_data, lookback=72, hold_period=24)
+    from strategies.trendline_strategy import TrendlineBreakoutStrategy
+    strategy_instance = TrendlineBreakoutStrategy(lookback=72, hold_period=24)
+    results = walkforward_multi(pairs_data, strategy=strategy_instance)
 
     # Analyser V75 avec le dernier modèle
     v75_path = "data/V75USDT3600.csv"
     if os.path.exists(v75_path):
         v75_data = load_pair(v75_path)
         last_model = list(results.values())[-1]['model']
-        analyze_v75_separately(v75_data, last_model)
+        analyze_v75_separately(v75_data, last_model, strategy_instance)
     else:
         print("⚠️  V75 non trouvé — lance d'abord download_v75.py")

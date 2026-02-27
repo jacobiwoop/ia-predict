@@ -20,9 +20,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from walkforward_multi import load_pair, walkforward_multi
-from trendline_break_dataset import trendline_breakout_dataset
-
-
 # ── Frais par paire (aller-retour complet) ───────────────────────────────────
 FEES = {
     'BTC': {
