@@ -64,13 +64,13 @@ def apply_fees(trades: pd.DataFrame, pair: str) -> pd.DataFrame:
     return trades
 
 
-def summary(trades_raw, trades_fees, name):
+def summary(trades_raw, trades_fees, name, threshold=0.5):
     """Affiche les stats avant et après frais."""
 
     def stats(t, label):
         t = t.dropna(subset=['model_prob'])
         all_r = t['return']
-        ml_r  = t[t['model_prob'] > 0.5]['return']
+        ml_r  = t[t['model_prob'] >= threshold]['return']
 
         wins_all  = all_r[all_r > 0].sum()
         loses_all = all_r[all_r < 0].abs().sum()
@@ -94,7 +94,7 @@ def summary(trades_raw, trades_fees, name):
     swap   = f.get('overnight_pct', 0) * 100
 
     print(f"\n{'='*60}")
-    print(f"  {name} — Impact des frais")
+    print(f"  {name} — Impact des frais (Seuil ML: {threshold})")
     print(f"  Spread : {spread:.2f}%  |  Swap/nuit : {swap:.3f}%")
     print(f"{'='*60}")
     print(f"  {'':20} {'SANS ML':>10} {'AVEC ML':>10}")
@@ -133,13 +133,21 @@ if __name__ == '__main__':
     print(f"Paires : {list(pairs_data.keys())}")
 
     # ── Walk-forward ─────────────────────────────────────────────────────────
-    print("\nCalcul du walk-forward...")
+    # Seuils ML optimisés par script
+    THRESHOLDS = {
+        'BTC': 0.52,
+        'ETH': 0.38,
+        'SOL': 0.64
+    }
+
+    print("\nCalcul du walk-forward avec probabilités optimisées...")
     results = walkforward_multi(
         pairs_data,
         lookback    = 72,
         hold_period = 24,
         train_size  = 365 * 24 * 2,
-        step_size   = 365 * 24
+        step_size   = 365 * 24,
+        thresholds  = THRESHOLDS
     )
 
     # ── Appliquer les frais et comparer ──────────────────────────────────────
@@ -150,7 +158,8 @@ if __name__ == '__main__':
         trades_raw  = res['trades'].copy()
         trades_fees = apply_fees(trades_raw, name)
 
-        verdicts[name] = summary(trades_raw, trades_fees, name)
+        thresh = THRESHOLDS.get(name, 0.5)
+        verdicts[name] = summary(trades_raw, trades_fees, name, threshold=thresh)
 
         # Préparer données pour le graphique
         df = res['df'].copy()
